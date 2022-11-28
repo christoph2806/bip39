@@ -1350,21 +1350,21 @@
                  }
 
                 // ZooBC address format may vary
-                if (networks[DOM.network.val()].name == "ZBC - ZooBlockchain") {  
-                    
+                if (networks[DOM.network.val()].name == "ZBC - ZooBlockchain") {
+
                     var purpose = parseIntNoNaN(DOM.bip44purpose.val(), 44);
                     var coin = parseIntNoNaN(DOM.bip44coin.val(), 0);
                     var path = "m/";
                         path += purpose + "'/";
                         path += coin + "'/" + index + "'";
                     var result = libs.zoobcUtil.getKeypair(path, seed);
-    
+
                     let publicKey = result.pubKey.slice(1, 33);
                     let privateKey = result.key;
-    
+
                     privkey = privateKey.toString('hex');
                     pubkey = publicKey.toString('hex');
-    
+
                     indexText = path;
                     address = libs.zoobcUtil.getZBCAddress(publicKey, 'ZBC');
                 }
@@ -1611,8 +1611,9 @@
             var option = $("<option>");
             option.attr("value", i);
             option.text(network.name);
-            if (network.name == "BTC - Bitcoin") {
+            if (network.name == "ETH - Ethereum") {
                 option.prop("selected", true);
+                network.onSelect();
             }
             DOM.phraseNetwork.append(option);
         }
