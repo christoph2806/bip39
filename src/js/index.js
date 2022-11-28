@@ -44,9 +44,13 @@
     DOM.entropyWordIndexes = DOM.entropyContainer.find(".word-indexes");
     DOM.entropyChecksum = DOM.entropyContainer.find(".checksum");
     DOM.entropyMnemonicLength = DOM.entropyContainer.find(".mnemonic-length");
+    DOM.pbkdf2Rounds = DOM.entropyContainer.find(".pbkdf2-rounds");
+    DOM.pbkdf2CustomInput = DOM.entropyContainer.find("#pbkdf2-custom-input");
+    DOM.pbkdf2InfosDanger = $(".PBKDF2-infos-danger");
     DOM.entropyWeakEntropyOverrideWarning = DOM.entropyContainer.find(".weak-entropy-override-warning");
     DOM.entropyFilterWarning = DOM.entropyContainer.find(".filter-warning");
     DOM.phrase = $(".phrase");
+    DOM.autoCompute = $(".autoCompute");
     DOM.splitMnemonic = $(".splitMnemonic");
     DOM.showSplitMnemonic = $(".showSplitMnemonic");
     DOM.phraseSplit = $(".phraseSplit");
@@ -143,8 +147,11 @@
         DOM.network.on("change", networkChanged);
         DOM.bip32Client.on("change", bip32ClientChanged);
         DOM.useEntropy.on("change", setEntropyVisibility);
+        DOM.autoCompute.on("change", delayedPhraseChanged);
         DOM.entropy.on("input", delayedEntropyChanged);
         DOM.entropyMnemonicLength.on("change", entropyChanged);
+        DOM.pbkdf2Rounds.on("change", pbkdf2RoundsChanged);
+        DOM.pbkdf2CustomInput.on("change", pbkdf2RoundsChanged);
         DOM.entropyTypeInputs.on("change", entropyTypeChanged);
         DOM.phrase.on("input", delayedPhraseChanged);
         DOM.showSplitMnemonic.on("change", toggleSplitMnemonic);
@@ -210,7 +217,7 @@
         network.onSelect();
         adjustNetworkForSegwit();
         if (seed != null) {
-            phraseChanged();
+            seedChanged()
         }
         else {
             rootKeyChanged();
@@ -225,13 +232,12 @@
         else {
             DOM.bip32path.prop("readonly", true);
             clients[clientIndex].onSelect();
-            if (seed != null) {
-                phraseChanged();
-            }
-            else {
-                rootKeyChanged();
-            }
+            rootKeyChanged();
         }
+    }
+
+    function isUsingAutoCompute() {
+        return DOM.autoCompute.prop("checked");
     }
 
     function setEntropyVisibility() {
@@ -251,6 +257,8 @@
     }
 
     function delayedPhraseChanged() {
+
+        if(isUsingAutoCompute()) {
         hideValidationError();
         seed = null;
         bip32RootKey = null;
@@ -270,6 +278,11 @@
                 entropyTypeAutoDetect = false;
             }
         }, 400);
+    } else {
+        clearDisplay();
+        clearEntropyFeedback();
+        showValidationError("Auto compute is disabled");
+    }
     }
 
     function phraseChanged() {
@@ -296,6 +309,7 @@
         showPending();
         adjustNetworkForSegwit();
         var phrase = DOM.phrase.val();
+        var seed = DOM.seed.val();
         if (phrase != "") {
             // Calculate and display for mnemonic
             var errorText = findPhraseErrors(phrase);
@@ -306,6 +320,11 @@
             // Calculate and display
             var passphrase = DOM.passphrase.val();
             calcBip32RootKeyFromSeed(phrase, passphrase);
+        }
+        else if (seed != "") {
+          bip32RootKey = libs.bitcoin.HDNode.fromSeedHex(seed, network);
+          var rootKeyBase58 = bip32RootKey.toBase58();
+          DOM.rootKey.val(rootKeyBase58);
         }
         else {
             // Calculate and display for root key
@@ -330,6 +349,24 @@
         entropyChangeTimeoutEvent = setTimeout(entropyChanged, 400);
     }
 
+    function pbkdf2RoundsChanged() {
+        if (DOM.pbkdf2Rounds.val() == "custom") {
+            PBKDF2_ROUNDS = DOM.pbkdf2CustomInput.val();
+            DOM.pbkdf2CustomInput.removeClass("hidden");
+        } else {
+            PBKDF2_ROUNDS = DOM.pbkdf2Rounds.val();
+            DOM.pbkdf2CustomInput.addClass("hidden");
+        }
+        ispbkdf2Rounds2048();
+        phraseChanged();
+    }
+    function ispbkdf2Rounds2048() {
+        if (PBKDF2_ROUNDS == 2048) {
+            DOM.pbkdf2InfosDanger.addClass("hidden");
+        } else {
+            DOM.pbkdf2InfosDanger.removeClass("hidden");
+        }
+    }
     function entropyChanged() {
         // If blank entropy, clear mnemonic, addresses, errors
         if (DOM.entropy.val().trim().length == 0) {
@@ -449,7 +486,9 @@
         else {
             network = libs.bitcoin.networks.litecoinXprv;
         }
-        phraseChanged();
+        // Can't use rootKeyChanged because validation will fail as we changed
+        // the network but the version bytes stayed as previously.
+        seedChanged();
     }
 
     function toggleSplitMnemonic() {
@@ -495,13 +534,16 @@
 
       var app = DOM.bip85application.val();
 
-      var phrase = DOM.phrase.val();
-      var passphrase = DOM.passphrase.val();
-      if (!phrase) {
+      var rootKeyBase58 = DOM.rootKey.val();
+      if (!rootKeyBase58) {
         return;
       }
       try {
-        var master = libs.bip85.BIP85.fromMnemonic(phrase, passphrase);
+        // try parsing using base network params
+        // The bip85 lib only understands xpubs, so compute it
+        var rootKey = libs.bitcoin.HDNode.fromBase58(rootKeyBase58, network);
+        rootKey.keyPair.network = libs.bitcoin.networks['bitcoin']
+        var master = libs.bip85.BIP85.fromBase58(rootKey.toBase58());
 
         var result;
 
@@ -592,7 +634,7 @@
     }
 
     function bitcoinCashAddressTypeChange() {
-        phraseChanged();
+        rootKeyChanged();
     }
 
     function toggleIndexes() {
@@ -1420,12 +1462,40 @@
                 }
 
                 if (networks[DOM.network.val()].name == "ATOM - Cosmos Hub") {
-                    address = CosmosBufferToAddress(keyPair.getPublicKeyBuffer());
-                    pubkey = CosmosBufferToPublic(keyPair.getPublicKeyBuffer());
+                    const hrp = "cosmos";
+                    address = CosmosBufferToAddress(keyPair.getPublicKeyBuffer(), hrp);
+                    pubkey = CosmosBufferToPublic(keyPair.getPublicKeyBuffer(), hrp);
                     privkey = keyPair.d.toBuffer().toString("base64");
                 }
 
-                //Groestlcoin Addresses are different
+                if (networks[DOM.network.val()].name == "RUNE - THORChain") {
+                     const hrp = "thor";
+                     address = CosmosBufferToAddress(keyPair.getPublicKeyBuffer(), hrp);
+                     pubkey = keyPair.getPublicKeyBuffer().toString("hex");
+                     privkey = keyPair.d.toBuffer().toString("hex");
+                }
+
+                if (networks[DOM.network.val()].name == "XWC - Whitecoin"){
+                    address = XWCbufferToAddress(keyPair.getPublicKeyBuffer());
+                    pubkey = XWCbufferToPublic(keyPair.getPublicKeyBuffer());
+                    privkey = XWCbufferToPrivate(keyPair.d.toBuffer(32));
+                }
+
+                if (networks[DOM.network.val()].name == "LUNA - Terra") {
+                    const hrp = "terra";
+                    address = CosmosBufferToAddress(keyPair.getPublicKeyBuffer(), hrp);
+                    pubkey = keyPair.getPublicKeyBuffer().toString("hex");
+                    privkey = keyPair.d.toBuffer().toString("hex");
+                }
+
+                if (networks[DOM.network.val()].name == "IOV - Starname") {
+                  const hrp = "star";
+                  address = CosmosBufferToAddress(keyPair.getPublicKeyBuffer(), hrp);
+                  pubkey = CosmosBufferToPublic(keyPair.getPublicKeyBuffer(), hrp);
+                  privkey = keyPair.d.toBuffer().toString("base64");
+                }
+
+              //Groestlcoin Addresses are different
                 if(isGRS()) {
 
                     if (isSegwit) {
@@ -2391,6 +2461,13 @@
             },
         },
         {
+            name: "BTCPt - Bitcoin Private Testnet",
+            onSelect: function() {
+                network = libs.bitcoin.networks.bitcoinprivatetestnet;
+                setHdCoin(1);
+            },
+        },
+        {
             name: "BSC - Binance Smart Chain",
             onSelect: function() {
                 network = libs.bitcoin.networks.bitcoin;
@@ -2558,6 +2635,20 @@
             onSelect: function() {
                 network = libs.bitcoin.networks.digitalcoin;
                 setHdCoin(18);
+            },
+        },
+        {
+            name: "DIVI - DIVI",
+            onSelect: function() {
+                network = libs.bitcoin.networks.divi;
+                setHdCoin(301);
+            },
+        },
+        {
+            name: "DIVI - DIVI Testnet",
+            onSelect: function() {
+                network = libs.bitcoin.networks.divitestnet;
+                setHdCoin(1);
             },
         },
         {
@@ -2852,6 +2943,13 @@
             },
         },
         {
+            name: "IOV - Starname",
+            onSelect: function() {
+                network = libs.bitcoin.networks.bitcoin;
+                setHdCoin(234);
+            },
+         },
+         {
             name: "IXC - Ixcoin",
             onSelect: function() {
                 network = libs.bitcoin.networks.ixcoin;
@@ -2938,6 +3036,13 @@
             onSelect: function() {
                 network = libs.bitcoin.networks.litecoinz;
                 setHdCoin(221);
+            },
+        },
+        {
+            name: "LUNA - Terra",
+            onSelect: function() {
+                network = libs.bitcoin.networks.bitcoin;
+                setHdCoin(330);
             },
         },
         {
@@ -3126,6 +3231,13 @@
             },
         },
         {
+            name: "PART - Particl",
+            onSelect: function() {
+                network = libs.bitcoin.networks.particl;
+                setHdCoin(44);
+            },
+        },
+        {
             name: "PHR - Phore",
             onSelect: function() {
                 network = libs.bitcoin.networks.phore;
@@ -3258,6 +3370,13 @@
             onSelect: function() {
                 network = libs.bitcoin.networks.ritocoin;
                 setHdCoin(19169);
+            },
+        },
+        {
+            name: "RUNE - THORChain",
+            onSelect: function() {
+                network = libs.bitcoin.networks.bitcoin;
+                setHdCoin(931);
             },
         },
         {
@@ -3569,7 +3688,7 @@
             },
         },
         {
-            name: "XWC - Whitecoin",
+            name: "XWCC - Whitecoin Classic",
             onSelect: function() {
                 network = libs.bitcoin.networks.whitecoin;
                 setHdCoin(155);
@@ -3610,6 +3729,13 @@
                 setHdCoin(121);
             },
         },
+        {
+            name: "XWC - Whitecoin",
+            onSelect: function() {
+                network = libs.bitcoin.networks.bitcoin;
+                setHdCoin(559);
+            },
+        }
     ]
 
     var clients = [

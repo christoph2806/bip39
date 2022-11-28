@@ -17,6 +17,9 @@ if (!browser) {
     console.log("Using default browser: chrome");
     browser = "chrome";
 }
+else if (browser !== 'chrome' && browser !== 'firefox') {
+    throw `Unsupported browser: "${browser}", must be "chrome" or "firefox"`
+}
 else {
     console.log("Using browser: " + browser);
 }
@@ -625,6 +628,26 @@ it('Allows selection of dash testnet', function(done) {
     };
     testNetwork(done, params);
 });
+it('Allows selection of divi', function(done) {
+    var params = {
+        selectText: "DIVI - DIVI",
+        phrase: "abandon abandon ability",
+        firstAddress: "DLeGz7jqF1y1cmfEkSeRBkQPK8vTZ8rHt4",
+        firstPubKey: "032ade8a36983a1efcc40d64b2a1a52cc26a908f7dc2fa222f43598812dd10d8bc",
+        firstPrivKey: "YWG1Fht24fMUntuAhVRMPSj2eVN7BxkM7SuuqRhg1ibsTNbr31VF",
+    };
+    testNetwork(done, params);
+});
+it('Allows selection of divi testnet', function(done) {
+    var params = {
+        selectText: "DIVI - DIVI Testnet",
+        phrase: "abandon abandon ability",
+        firstAddress: "yB5U384n6dGkVE3by5y9VdvHHPwPg68fQj",
+        firstPubKey: "0382a5450765e2025bdb5f7d109c9254a11ef97a566228bf171d80ecb348763bb0",
+        firstPrivKey: "cV3coiYD2NhHKfhC6Gb8DzpvPzcGYYExYxuNxpUtKq3VUJrkFLZx",
+    };
+    testNetwork(done, params);
+});
 it('Allows selection of game', function(done) {
     var params = {
         selectText: "GAME - GameCredits",
@@ -927,6 +950,16 @@ it('Allows selection of Cosmos Hub', function(done) {
     };
     testNetwork(done, params);
 });
+it('Allows selection of Terra', function(done) {
+    var params = {
+        selectText: "LUNA - Terra",
+        phrase: "abandon abandon ability",
+        firstAddress: "terra1txr4jwel3vjl64vrc08pljnjryqkhtffmyp265",
+        firstPubKey: "028e7658e3debb2d9d458919bfba0e85b0220e845f7552176f30a52acd0f809d71",
+        firstPrivKey: "d611b211e370aa1edd9743acd6ce537d16fade85d7ae7e88b32f3a0483f52535",
+    };
+    testNetwork(done, params);
+});
 it('Allows selection of Auroracoin', function(done) {
     var params = {
         selectText: "AUR - Auroracoin",
@@ -984,6 +1017,16 @@ it('Allows selection of Bitcoin Private', function(done) {
         firstAddress: "b1M3PbiXXyN6Hdivdw5rJv5VKpLjPzhm4jM",
         firstPubKey: "03b4dae910c8563ae77e4c665022f8afbf8bcc659ce3bc790a74956e5ebba932af",
         firstPrivKey: "L5U3Rfy7otN5JQP9iveYkT1pB9va71uebx7VE8reBbiAofKCiCxk",
+    };
+    testNetwork(done, params);
+});
+it('Allows selection of Bitcoin Private testnet', function(done) {
+    var params = {
+        selectText: "BTCPt - Bitcoin Private Testnet",
+        phrase: "abandon abandon ability",
+        firstAddress: "n1UcUUSDfDppfzh7XLJNHmZkLdbTQg3VAZL",
+        firstPubKey: "0382a5450765e2025bdb5f7d109c9254a11ef97a566228bf171d80ecb348763bb0",
+        firstPrivKey: "cV3coiYD2NhHKfhC6Gb8DzpvPzcGYYExYxuNxpUtKq3VUJrkFLZx",
     };
     testNetwork(done, params);
 });
@@ -1355,6 +1398,16 @@ it('Allows selection of Iop', function(done) {
     };
     testNetwork(done, params);
 });
+it('Allows selection of Starname', function(done) {
+    var params = {
+        selectText: "IOV - Starname",
+        phrase: "abandon abandon ability",
+        firstAddress: "star1xgfvgq40r7ff8ylw9l95dw56xnr0pvtjnlp7h4",
+        firstPubKey: "starpub1addwnpepqg9x5cft48hcgx25vyzeyygntl7pt763datr6v50hrecafyane54xlqdxkd",
+        firstPrivKey: "bGI4BNRvMYT1lbCOoH000HvNFPkyXms9n3Xp1X/7E80=",
+    };
+    testNetwork(done, params);
+});
 it('Allows selection of Ixcoin', function(done) {
     var params = {
         selectText: "IXC - Ixcoin",
@@ -1665,6 +1718,16 @@ it('Allows selection of Rubycoin', function(done) {
     };
     testNetwork(done, params);
 });
+it('Allows selection of THORChain', function(done) {
+    var params = {
+        selectText: "RUNE - THORChain",
+        phrase: "flip vicious divorce angle toward say derive blue refuse load word creek once expire bounce",
+        firstAddress: "thor1zp3yx758t64vqvu8776vnwd0udrs2vwuxhc4ep",
+        firstPubKey: "02fa85b75ef37fe3a4f4a6d62352aa7de070d2b39af9c55be26f079d01f406851d",
+        firstPrivKey: "6020c0d5a9a8689c491c6a8f36beb70bf459e129e1428fed64aaf594beee54a6",
+    };
+    testNetwork(done, params);
+});
 it('Allows selection of Salus', function(done) {
     var params = {
         selectText: "SLS - Salus",
@@ -1875,13 +1938,23 @@ it('Allows selection of VeChain', function(done) {
     };
     testNetwork(done, params);
 });
-it('Allows selection of Whitecoin', function(done) {
+it('Allows selection of Whitecoin Classic', function(done) {
     var params = {
-        selectText: "XWC - Whitecoin",
+        selectText: "XWCC - Whitecoin Classic",
         phrase: "abandon abandon ability",
         firstAddress: "WcSwCAUqrSgeSYbsaS3SSWWhsx8KRYTFDR",
         firstPubKey: "03d3f4fa758f6260bfb39664d248a32258b53a90a71224db056ee79abaa3e9f208",
         firstPrivKey: "WrGUVSubUyDx5wzjfwi3EhhUwf5anHFW7Dv9kAaTu39CtDDBJWM9",
+    };
+    testNetwork(done, params);
+});
+it('Allows selection of Whitecoin', function(done) {
+    var params = {
+        selectText: "XWC - Whitecoin",
+        phrase: "abandon abandon ability",
+        firstAddress: "XWCNY5EQsC55ifxRVEbP7H28yc3TMXC2pqsb5",
+        firstPubKey: "XWC68fEy4cCc8G1UWyeMPnQ5NjEhMUFSvu1oz4gLKxvj3dPvh7v18",
+        firstPrivKey: "5K8toD6TYy5DMHkxjpywXNLj4M6CjZAT5h12uhRuVuBBRtci8Zw",
     };
     testNetwork(done, params);
 });
@@ -2355,6 +2428,17 @@ it('Allows selection of ZooBlockchain', function(done) {
         firstAddress: "ZBC_MGEZVH3U_SXPCBHTU_KSWDPQ4X_K6MSI3VR_CQAYMTLC_RXUMM3DJ_LFABCAXA",
         firstPubKey: "61899a9f7495de209e7454ac37c3975799246eb11401864d628de8c66c695940",
         firstPrivKey: "adb11e79068fa7366ec4f5963ad57115d666b1ad2b369b92d962563adf7dd48b",
+    };
+    testNetwork(done, params);
+});
+
+it('Allows selection of Particl', function(done) {
+    var params = {
+        selectText: "PART - Particl",
+        phrase: "abandon abandon ability",
+        firstAddress: "Pjf2jj1E4GLJnyZA6jNN25Ajn4wHDahuL5",
+        firstPubKey: "039d803bfa8bd30c9e74c14a8785cee64b696b56e10d7545ad3fbf954c40cbfda2",
+        firstPrivKey: "H79cmSqW1uYVbi14c8VH5eH9UdpjhuvGmXFV8zhkcfR84TEUWfHp",
     };
     testNetwork(done, params);
 });
@@ -2982,6 +3066,25 @@ it('Uses the correct derivation for altcoins with root keys', function(done) {
     // 1) 2) and 3) set the root key
     driver.findElement(By.css('.root-key'))
         .sendKeys("xprv9s21ZrQH143K2jkGDCeTLgRewT9F2pH5JZs2zDmmjXes34geVnFiuNa8KTvY5WoYvdn4Ag6oYRoB6cXtc43NgJAEqDXf51xPm6fhiMCKwpi");
+    driver.sleep(generateDelay).then(function() {
+        // 4) switch from bitcoin to viacoin
+        selectNetwork("VIA - Viacoin");
+        driver.sleep(generateDelay).then(function() {
+            // 5) ensure the derived address is correct
+            getFirstAddress(function(address) {
+                expect(address).toBe("Vq9Eq4N5SQnjqZvxtxzo7hZPW5XnyJsmXT");
+                done();
+            });
+        });
+    });
+});
+
+// Changing the coin when only using a seed (without a mnemonic phrase) should
+// work the same as the previous test.
+// See https://github.com/iancoleman/bip39/pull/486
+it('Uses the correct derivation for altcoins with seed and without mnemonic phrase', function(done) {
+    driver.findElement(By.css('.seed'))
+        .sendKeys("20da140d3dd1df8713cefcc4d54ce0e445b4151027a1ab567b832f6da5fcc5afc1c3a3f199ab78b8e0ab4652efd7f414ac2c9a3b81bceb879a70f377aa0a58f3");
     driver.sleep(generateDelay).then(function() {
         // 4) switch from bitcoin to viacoin
         selectNetwork("VIA - Viacoin");
